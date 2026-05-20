@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tripmory — Your Trip Memories, Beautifully Organized</title>
+  <meta name="description" content="Tripmory automatically organizes your travel photos by destination and date, turning your camera roll into a beautiful personal travel archive." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --amber:     #EF9F27;
+      --amber-lt:  #FAC775;
+      --amber-dk:  #BA7517;
+      --amber-xdk: #633806;
+      --cream:     #FFFBF5;
+      --cream-2:   #FFF6E8;
+      --warm-gray: #8C7B6B;
+      --text:      #2C1A08;
+      --text-lt:   #5C4030;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--cream);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* subtle paper texture via repeating pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(239,159,39,.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* warm glow */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -10vh;
+      right: -10vw;
+      width: 60vw;
+      height: 60vh;
+      background: radial-gradient(ellipse, rgba(250,199,117,.25) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 3rem;
+      background: rgba(255,251,245,.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(239,159,39,.15);
+    }
+
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--amber-xdk);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--amber); }
+
+    .nav-back {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .75rem;
+      color: var(--warm-gray);
+      text-decoration: none;
+      letter-spacing: .06em;
+      transition: color .2s;
+    }
+    .nav-back:hover { color: var(--amber-dk); }
+
+    /* HERO */
+    .hero {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+    }
+
+    .hero-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .7rem;
+      color: var(--amber-dk);
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp .6s ease forwards .2s;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3rem, 8vw, 6rem);
+      font-weight: 700;
+      color: var(--amber-xdk);
+      line-height: 1.05;
+      letter-spacing: -.02em;
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fadeUp .7s ease forwards .35s;
+    }
+    .hero-title em {
+      font-style: italic;
+      color: var(--amber);
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--text-lt);
+      max-width: 520px;
+      line-height: 1.7;
+      margin: 0 auto 3rem;
+      font-weight: 300;
+      opacity: 0;
+      animation: fadeUp .7s ease forwards .5s;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .9rem 2.2rem;
+      background: var(--amber);
+      color: var(--amber-xdk);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .9rem;
+      font-weight: 500;
+      text-decoration: none;
+      border-radius: 100px;
+      transition: background .25s, transform .2s;
+      opacity: 0;
+      animation: fadeUp .7s ease forwards .65s;
+    }
+    .hero-cta:hover {
+      background: var(--amber-lt);
+      transform: translateY(-2px);
+    }
+
+    /* photo collage mockup */
+    .photo-collage {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      height: 320px;
+      margin: 4rem auto 0;
+      opacity: 0;
+      animation: fadeUp .8s ease forwards .8s;
+    }
+
+    .photo-card {
+      position: absolute;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(99,56,6,.12);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .photo-card .img {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .photo-card .meta {
+      padding: .5rem .75rem;
+      border-top: 1px solid rgba(239,159,39,.15);
+    }
+    .photo-card .meta .dest {
+      font-size: .7rem;
+      font-weight: 500;
+      color: var(--amber-dk);
+    }
+    .photo-card .meta .date {
+      font-size: .6rem;
+      color: var(--warm-gray);
+    }
+
+    .card-1 { width: 160px; height: 200px; left: 40px; top: 20px; transform: rotate(-6deg); background: #FFF8EE; }
+    .card-1 .img { background: linear-gradient(135deg, #FAC775, #EF9F27); }
+    .card-2 { width: 180px; height: 220px; left: 50%; transform: translateX(-50%) rotate(2deg); top: 0; background: #FFFBF5; }
+    .card-2 .img { background: linear-gradient(135deg, #5DCAA5, #1D9E75); }
+    .card-3 { width: 155px; height: 195px; right: 40px; top: 30px; transform: rotate(5deg); background: #F8F7FF; }
+    .card-3 .img { background: linear-gradient(135deg, #AFA9EC, #7F77DD); }
+
+    /* FEATURES */
+    #features {
+      position: relative;
+      z-index: 1;
+      padding: 6rem 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--cream-2);
+      border: 1px solid rgba(239,159,39,.2);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: transform .3s, border-color .3s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(239,159,39,.5);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--amber-lt);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .feature-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--amber-xdk);
+      margin-bottom: .5rem;
+    }
+
+    .feature-desc {
+      font-size: .9rem;
+      color: var(--text-lt);
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    /* COMING SOON */
+    #notify {
+      position: relative;
+      z-index: 1;
+      padding: 6rem 2rem;
+      text-align: center;
+      border-top: 1px solid rgba(239,159,39,.15);
+    }
+
+    .notify-inner { max-width: 480px; margin: 0 auto; }
+
+    .coming-soon-badge {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      padding: .4rem 1.2rem;
+      background: var(--amber-lt);
+      color: var(--amber-xdk);
+      border-radius: 100px;
+      margin-bottom: 1.5rem;
+    }
+
+    #notify h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      color: var(--amber-xdk);
+      margin-bottom: 1rem;
+    }
+
+    #notify p {
+      font-size: 1rem;
+      color: var(--text-lt);
+      line-height: 1.7;
+      margin-bottom: 2rem;
+      font-weight: 300;
+    }
+
+    /* FOOTER */
+    footer {
+      position: relative;
+      z-index: 1;
+      padding: 2rem 3rem;
+      border-top: 1px solid rgba(239,159,39,.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    footer p {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .7rem;
+      color: var(--warm-gray);
+      letter-spacing: .04em;
+    }
+
+    footer a {
+      color: var(--amber-dk);
+      text-decoration: none;
+    }
+    footer a:hover { text-decoration: underline; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      nav { padding: 1rem 1.5rem; }
+      .photo-collage { height: 240px; }
+      .card-1 { width: 120px; height: 155px; left: 10px; }
+      .card-2 { width: 140px; height: 170px; }
+      .card-3 { width: 120px; height: 150px; right: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="https://imaginadev.com" class="nav-logo"><span>T</span>ripmory</a>
+    <a href="https://imaginadev.com" class="nav-back">← imaginadev.com</a>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-eyebrow">by ImaginaDev LLC</div>
+    <h1 class="hero-title">Your trips.<br><em>Remembered.</em></h1>
+    <p class="hero-sub">
+      Tripmory automatically organizes your travel photos by destination and date — turning your scattered camera roll into a beautiful personal travel archive.
+    </p>
+    <a href="#notify" class="hero-cta">Get Early Access →</a>
+
+    <div class="photo-collage">
+      <div class="photo-card card-1">
+        <div class="img">🌅</div>
+        <div class="meta">
+          <div class="dest">Santorini, Greece</div>
+          <div class="date">June 2024 · 47 photos</div>
+        </div>
+      </div>
+      <div class="photo-card card-2">
+        <div class="img">🌿</div>
+        <div class="meta">
+          <div class="dest">Bali, Indonesia</div>
+          <div class="date">March 2024 · 112 photos</div>
+        </div>
+      </div>
+      <div class="photo-card card-3">
+        <div class="img">🏔️</div>
+        <div class="meta">
+          <div class="dest">Patagonia, Chile</div>
+          <div class="date">Jan 2024 · 89 photos</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📍</div>
+        <div class="feature-title">Auto-organized by destination</div>
+        <p class="feature-desc">Tripmory reads your photos' location data and automatically groups them by trip and destination. No manual sorting ever.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <div class="feature-title">Timeline of your travels</div>
+        <p class="feature-desc">See every trip you've ever taken in a beautiful chronological timeline. Your personal travel history, always at your fingertips.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✨</div>
+        <div class="feature-title">Smart highlights</div>
+        <p class="feature-desc">Tripmory surfaces your best shots automatically — the golden hour, the candid laugh, the perfect landscape. Your highlights, curated.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="notify">
+    <div class="notify-inner">
+      <div class="coming-soon-badge">Coming Soon</div>
+      <h2>Be the first to know.</h2>
+      <p>Tripmory is in development. Join the waitlist and we'll let you know the moment it's ready for iOS.</p>
+      <a href="mailto:info@imaginadev.com?subject=Tripmory Waitlist" class="hero-cta">Join the Waitlist →</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 <a href="https://imaginadev.com">ImaginaDev LLC</a></p>
+    <p>/* develop with imagination */</p>
+  </footer>
+
+</body>
+</html>
